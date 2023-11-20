@@ -1,0 +1,14 @@
+{
+    "CapitalToBeUsed":500000,
+    "Expiry":"",
+    "Index":"NIFTY",
+    "ATRMultiplier":2,
+    "MaxLoss":20000,
+    "ProductType":"NRML",
+    "BuyPrice":200,
+    "FirstTargetMultiplier":1.5,
+    "ExitTargetMultiplier":2.5,
+    "TriggerDifference":3
+    
+
+}
