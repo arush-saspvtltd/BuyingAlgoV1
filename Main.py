@@ -1,307 +1,151 @@
-import time
-try:
-    import Cred
-    from kiteconnect import KiteConnect
-    import json
-    import currentStrike , FindExpiry , datetime , talib , requests  , datetime
-    import numpy as np
-    import pandas as pd
+from Login_Zerodha import login_in_zerodha
+from kiteconnect import KiteConnect
+from GenerateBasket import GenerateBasket
+from Store.Strategies import Strategies
+import json , os , time , requests,datetime , threading , sys
+from Functions import Store  , Script , ExtraFunctions 
+from Store import Cred
+import pandas as pd
+ZerodhaApis = []
 
-    Credentials = Cred.Crosshair
+ZerodhaAccounts = []
 
-    
-    URL ="https://api.kite.trade/instruments"
-    response = requests.get(URL)
-    open("instruments.txt", "wb").write(response.content)
+global TradeFunctionStart
 
-    file = open("/Users/crosshair/Documents/GitHub/BuyingAlgoV1/AccessToken/"+Credentials["user_id"] + '.txt', 'r')
+def wait_until_valid_time():
+    start_time = datetime.time(8, 45, 0)
+    end_time = datetime.time(15, 30, 0)
 
-    Credentials['access_token'] = file.read()
-    api = KiteConnect(api_key=Credentials["api_key"])
-    api.set_access_token(Credentials["access_token"])
-
-
-    
-    with open('Variables.json', 'r') as openfile:
-    
-        # Reading from json file
-        Variables = json.load(openfile)
-
-    # print(Variables)
-
-    OptionType = "CE"
-
-    ATM = currentStrike.currentStrike(api , Variables['Index'] , 0 , 0, 0, 0 )
-    print(ATM)
-
-    ltpType = "NFO:"
-    StrikeDifference = 0
-
-    exchange = "NFO"
-    if Variables["Index"] == "NIFTY":
-        QtySlicer =50
-        StrikeDifference = 50
-        MaxQuantity = 1800
-        
-    elif Variables["Index"] == "FINNIFTY":
-            QtySlicer =40
-            StrikeDifference = 50
-            MaxQuantity = 1800
-
-    elif Variables["Index"] == "BANKNIFTY":
-            QtySlicer =15
-            StrikeDifference = 100
-            MaxQuantity = 900
-        
-    elif Variables["Index"] == "MIDCPNIFTY":
-            QtySlicer =75
-            StrikeDifference = 25
-            MaxQuantity = 4200
-        
-    elif(Variables["Index"] =="SENSEX"):  
-        exchange = "BFO"
-        QtySlicer =10
-        StrikeDifference = 100
-        MaxQuantity = 1000
-        ltpType = "BFO:"
-
-
-    expiry = FindExpiry.findExpiry(Variables["Index"] , ATM)
-    year = datetime.datetime.now().year % 100
-    Symbol = ""
-    price = 0
-    
     while True:
-        Symbol = Variables['Index'] + str( year) + expiry +str( ATM )+ OptionType
-        # print(Symbol)
-        price = api.ltp(ltpType+Symbol).get(ltpType+Symbol)
-        instrument_token = price.get('instrument_token')
-        price = price.get('last_price')
-        if price > Variables['BuyPrice']:
+        current_time = datetime.datetime.now().time()
+
+        if start_time <= current_time <= end_time:
+            print("The current time is within the specified range. Continuing with the program.")
             break
-        else :
-            ATM = ATM - StrikeDifference 
-    
-    print(price , Symbol)
-    
-    StopLoss =0
-    StopLoss = input("Please Enter StopLoss:- ")
+
+        print(f"Waiting for valid time. Current time: {current_time}")
+        time.sleep(5)  # Wait for 1 minute before checking again
+
+# Call the function to start waiting
+wait_until_valid_time()
+
+# Your program logic goes here
+print("Program is now running.")
+
+
+
+def addZerodhaAccount(Credentials):
+    ZerodhaAccounts.append(Credentials)
+
+# addZerodhaAccount(Cred.Crosshair)
+addZerodhaAccount(Cred.Riyaaz)
+addZerodhaAccount(Cred.Harsh2)
+addZerodhaAccount(Cred.Sanjay)
+addZerodhaAccount(Cred.AnkitShah)
+addZerodhaAccount(Cred.Parag)
+addZerodhaAccount(Cred.Ankit)
+addZerodhaAccount(Cred.Manjunath)
+addZerodhaAccount(Cred.Milan)
+addZerodhaAccount(Cred.Rishee)
+addZerodhaAccount(Cred.Sumit)
+addZerodhaAccount(Cred.InjoNavish)
+addZerodhaAccount(Cred.Vijet)
+addZerodhaAccount(Cred.Dilip)
+
+
+for ZerodhaAccount in ZerodhaAccounts :
+    LoginArray = []
+    try :
+        ExtraFunctions.ZerodhaApiLogin(ZerodhaAccount)
+    except Exception as e:
+        LoginArray.append(ZerodhaAccount)
         
-    StopLoss = int(StopLoss)
+    Threads = []
     
+    for ZerodhaAccount in LoginArray:
+        T = threading.Thread(target=login_in_zerodha , args= [ZerodhaAccount])
+        T.start()
+        Threads.append(T)
+    for Thread in Threads :
+     Thread.join()
 
-    # Calculate yesterday's date
+    ZerodhaApis.append(ExtraFunctions.ZerodhaApiLogin(ZerodhaAccount))
+
+
+
+
+#  Generate Basket
+if not ExtraFunctions.is_function_used_today("GenerateBasket"):
+ QuantityJSON = GenerateBasket(ZerodhaApis)
+ with open("Logs/GenerateBasket.txt", "a") as file:
+              file.write(str(datetime.date.today()) + "\n")
+
+with open("Quantity.json") as f:
+         QuantityJSON = json.load(f)
+         
+for Client in QuantityJSON:
     
+    QuantityJSON[Client]["API"] =  ExtraFunctions.ZerodhaApiLogin(QuantityJSON[Client]["Cred"])['API']
 
-    lots  = int((Variables["MaxLoss"] / StopLoss )/QtySlicer)
-    qty =  (lots) * QtySlicer
-    print(qty)
+
+Day = datetime.datetime.now().isoweekday()
+# Day = 4
+# MainAPI = ExtraFunctions.ZerodhaApiLogin(Cred.Crosshair)
+MainAPI = ExtraFunctions.ZerodhaApiLogin(Cred.Harsh2)
+
+
     
-    
-    StopLossOrders =[]
-    Type = Variables['ProductType']
-    while (qty >MaxQuantity):
-
-                    api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_BUY,
-                                            quantity=MaxQuantity,
-                                            order_type=api.ORDER_TYPE_MARKET,
-                                            
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                    qty = qty- MaxQuantity
-                
-    if qty > 0:
-                            
-                        api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_BUY,
-                                            quantity=qty,
-                                            order_type=api.ORDER_TYPE_MARKET,
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                        print("Order Placed")
-    lots  = int((Variables["MaxLoss"] / StopLoss )/QtySlicer)
-    qty =  (lots) * QtySlicer
-    print(qty)
-    while (qty > MaxQuantity):
-
-                    order=  api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_SELL,
-                                            quantity=MaxQuantity,
-                                            order_type=api.ORDER_TYPE_SL,
-                                            trigger_price=price -StopLoss,
-                                            price= price -StopLoss + Variables['TriggerDifference'], 
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                    qty = qty- MaxQuantity
-                    StopLossOrders.append(order)
-                
-    if qty > 0:
-                            
-                        order=    api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_SELL,
-                                            quantity=qty,
-                                            order_type=api.ORDER_TYPE_SL,
-                                            trigger_price=price -StopLoss,
-                                            price= price -StopLoss + Variables['TriggerDifference'],
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                        print("Order Placed")
-    lots  = int((Variables["MaxLoss"] / StopLoss )/QtySlicer)
-    qty =  (lots) * QtySlicer
-    
-    print(qty)   
-    while True:
-        time.sleep(0.3)
-        if api.ltp(ltpType+Symbol).get(ltpType+Symbol).get('last_price') > price *Variables['FirstTargetMultiplier']:
-            SquareOffQuantity = int(int(qty/QtySlicer)/2) *QtySlicer
-            
-            while (SquareOffQuantity >MaxQuantity):
-
-                    api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_SELL,
-                                            quantity=MaxQuantity,
-                                            order_type=api.ORDER_TYPE_MARKET,
-                                            
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                    SquareOffQuantity = SquareOffQuantity- MaxQuantity
-                
-            if SquareOffQuantity > 0:
-                            
-                        api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_SELL,
-                                            quantity=SquareOffQuantity,
-                                            order_type=api.ORDER_TYPE_MARKET,
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                        print("Order Placed")
-            break
+def TradeFunction(Variables  , StrategyNo):
+    Store.status[StrategyNo] = "Function " + StrategyNo + " has Started"
+    Variables['StrategyName'] = StrategyNo
+    TradeFunctionStart = True 
+    Store.Global_Status[('Strategy'+ StrategyNo)] = []
+    Store.Global_Status[('Strategy'+ StrategyNo)].append('TradeFunction has Started')
+    while TradeFunctionStart:
+      
+    #   os.system('clear')
+      if ExtraFunctions.CompareTime(Variables['Time']):
+        time.sleep(5)
         
-    orderbook = api.orders()
-   
+        with open("Logs/" + StrategyNo + ".txt", "a") as file:
+            # file.write(str(datetime.date.today()) + "\n")
+            ExtraFunctions.send_to_telegram("Started taking Trade")
+            Store.Global_Status[('Strategy'+ StrategyNo)].append('Time Requirement Fulfilled')
 
-    for order in orderbook:
+        TradeFunctionStart = Script.Search(MainAPI["API"]  , Variables ,  QuantityJSON , Cred.Harsh2 , TradeFunctionStart, StrategyNo)
         
-        if order['status']=="TRIGGER PENDING":
-                print(order)
-                api.cancel_order("regular",order["order_id"])
-    lots  = int((Variables["MaxLoss"] / StopLoss )/QtySlicer)
-    qty =  (lots - int(lots/2) )* QtySlicer
+
+
+if  ExtraFunctions.is_function_used_today("1") == False:
     
-    while (qty > MaxQuantity):
-
-                    order=  api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_SELL,
-                                            quantity=MaxQuantity,
-                                            order_type=api.ORDER_TYPE_SL,
-                                            trigger_price=price,
-                                            price= price  + Variables['TriggerDifference'], 
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                    qty = qty- MaxQuantity
-                    StopLossOrders.append(order)
-                
-    if qty > 0:
-                            
-                        order=    api.place_order(variety=api.VARIETY_REGULAR,
-                                            tradingsymbol=Symbol,
-                                            exchange=exchange,
-                                            transaction_type=api.TRANSACTION_TYPE_SELL,
-                                            quantity=qty,
-                                            order_type=api.ORDER_TYPE_SL,
-                                            trigger_price=price ,
-                                            price= price  + Variables['TriggerDifference'],
-                                            product=Type,
-                                            validity=api.VALIDITY_DAY)
-                        print("Order Placed")
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['1'] , "1"]).start()
+else :
+    print("Main One has Finished")
     
-    print(qty)   
-    while True:
-        time.sleep(0.3)
-
-        if api.ltp(ltpType+Symbol).get(ltpType+Symbol).get('last_price') > price *Variables['ExitTargetMultiplier']:
-            orderbook = API.orders()
-   
-
-            for order in orderbook:
-            
-                if order['status']=="TRIGGER PENDING":
-                    print(order)
-                    API.cancel_order("regular",order["order_id"])
-                    print(order)
-
-
-            positions = API.positions()
-
-        # for position in positions['day']:
-        #     # if position['quantity'] ==0 :
-        #         print(position['quantity'])
-            for position in positions['net']:
-                
-                if position['quantity'] !=0 :
-                    print(position)
-                    if position['quantity']<0 :
-                        qty = abs(position['quantity'])
-                        while(qty > qtySlicer):
-                            API.place_order(variety=API.VARIETY_REGULAR,
-                                                        tradingsymbol=position['tradingsymbol'],
-                                                        exchange=exchange,
-                                                        transaction_type=API.TRANSACTION_TYPE_BUY,
-                                                        quantity=qtySlicer,
-                                                        order_type=API.ORDER_TYPE_MARKET,
-                                                        product=position["product"],
-                                                        validity=API.VALIDITY_DAY)
-                            qty = qty -qtySlicer
-                            
-                        API.place_order(variety=API.VARIETY_REGULAR,
-                                                        tradingsymbol=position['tradingsymbol'],
-                                                        exchange=exchange,
-                                                        transaction_type=API.TRANSACTION_TYPE_BUY,
-                                                        quantity=qty,
-                                                        order_type=API.ORDER_TYPE_MARKET,
-                                                        product=position["product"],
-                                                        validity=API.VALIDITY_DAY)
-                    if position['quantity']>0 :
-                        qty = abs(position['quantity'])
-                        while(qty > qtySlicer):
-                            API.place_order(variety=API.VARIETY_REGULAR,
-                                                        tradingsymbol=position['tradingsymbol'],
-                                                        exchange=exchange,
-                                                        transaction_type=API.TRANSACTION_TYPE_SELL,
-                                                        quantity=qtySlicer,
-                                                        order_type=API.ORDER_TYPE_MARKET,
-                                                        product=position["product"],
-                                                        validity=API.VALIDITY_DAY)
-                            qty = qty -qtySlicer
-                            
-                        API.place_order(variety=API.VARIETY_REGULAR,
-                                                        tradingsymbol=position['tradingsymbol'],
-                                                        exchange=exchange,
-                                                        transaction_type=API.TRANSACTION_TYPE_SELL,
-                                                        quantity=qty,
-                                                        order_type=API.ORDER_TYPE_MARKET,
-                                                        product=position["product"],
-                                                        validity=API.VALIDITY_DAY)
-        break
-
-
-except Exception as e:
-      raise Exception(e)
-      time.sleep(10000)
-
-
+# if  ExtraFunctions.is_function_used_today("2") == False:
+    
+#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['2'] , "2"]).start()
+# else :
+#     print("Main Two has Finished")
+# if  ExtraFunctions.is_function_used_today("3") == False:
+    
+#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['3'] , "3"]).start()
+# else :
+#     print("Main Three has Finished")
+# if  ExtraFunctions.is_function_used_today("4") == False:
+    
+#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['4'] , "4"]).start()
+# else :
+#     print("Main Four has Finished")
+    
+while True :
+    # try :
+        # print((Store.Global_Status))
+        print( "Time:", datetime.datetime.now().strftime('%H:%M:%S'))
+        ExtraFunctions.display_arrays_and_objects(Store.Global_Status)
+        
+        
+    # except Exception as  e:
+    #     print(e , "Exception in main") 
+        time.sleep(1)
+        os.system('clear')
