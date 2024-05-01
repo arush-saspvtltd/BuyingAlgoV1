@@ -37,20 +37,20 @@ print("Program is now running.")
 def addZerodhaAccount(Credentials):
     ZerodhaAccounts.append(Credentials)
 
-# addZerodhaAccount(Cred.Crosshair)
-addZerodhaAccount(Cred.Riyaaz)
-addZerodhaAccount(Cred.Harsh2)
-addZerodhaAccount(Cred.Sanjay)
-addZerodhaAccount(Cred.AnkitShah)
-addZerodhaAccount(Cred.Parag)
-addZerodhaAccount(Cred.Ankit)
-addZerodhaAccount(Cred.Manjunath)
-addZerodhaAccount(Cred.Milan)
-addZerodhaAccount(Cred.Rishee)
-addZerodhaAccount(Cred.Sumit)
-addZerodhaAccount(Cred.InjoNavish)
-addZerodhaAccount(Cred.Vijet)
-addZerodhaAccount(Cred.Dilip)
+addZerodhaAccount(Cred.Crosshair)
+# addZerodhaAccount(Cred.Riyaaz)
+# addZerodhaAccount(Cred.Harsh2)
+# addZerodhaAccount(Cred.Sanjay)
+# addZerodhaAccount(Cred.AnkitShah)
+# addZerodhaAccount(Cred.Parag)
+# addZerodhaAccount(Cred.Ankit)
+# addZerodhaAccount(Cred.Manjunath)
+# addZerodhaAccount(Cred.Milan)
+# addZerodhaAccount(Cred.Rishee)
+# addZerodhaAccount(Cred.Sumit)
+# addZerodhaAccount(Cred.InjoNavish)
+# addZerodhaAccount(Cred.Vijet)
+# addZerodhaAccount(Cred.Dilip)
 
 
 for ZerodhaAccount in ZerodhaAccounts :
@@ -122,21 +122,21 @@ if  ExtraFunctions.is_function_used_today("1") == False:
 else :
     print("Main One has Finished")
     
-# if  ExtraFunctions.is_function_used_today("2") == False:
+if  ExtraFunctions.is_function_used_today("2") == False:
     
-#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['2'] , "2"]).start()
-# else :
-#     print("Main Two has Finished")
-# if  ExtraFunctions.is_function_used_today("3") == False:
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['2'] , "2"]).start()
+else :
+    print("Main Two has Finished")
+if  ExtraFunctions.is_function_used_today("3") == False:
     
-#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['3'] , "3"]).start()
-# else :
-#     print("Main Three has Finished")
-# if  ExtraFunctions.is_function_used_today("4") == False:
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['3'] , "3"]).start()
+else :
+    print("Main Three has Finished")
+if  ExtraFunctions.is_function_used_today("4") == False:
     
-#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['4'] , "4"]).start()
-# else :
-#     print("Main Four has Finished")
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['4'] , "4"]).start()
+else :
+    print("Main Four has Finished")
     
 while True :
     # try :
