@@ -18,7 +18,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from os import system
 
 def login_in_zerodha(Cred):
-    service = Service(ChromeDriverManager().install())
+    service = Service("/Users/crosshair/.wdm/drivers/chromedriver/mac64/126.0.6478.183/chromedriver-mac-arm64/chromedriver")
 # except ValueError:
 #     latest_chromedriver_version_url = "https://chromedriver.storage.googleapis.com/LATEST_RELEASE"
 #     latest_chromedriver_version = urllib.request.urlopen(latest_chromedriver_version_url).read().decode('utf-8')
@@ -31,6 +31,8 @@ def login_in_zerodha(Cred):
     options.add_argument("enable-automation")
     options.add_argument("--disable-infobars")
     options.add_argument("--disable-dev-shm-usage")
+    options.binary_location = "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"
+
     api_key= Cred['api_key']
     api_secret =Cred['api_secret']
     user_id=Cred['user_id']

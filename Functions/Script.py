@@ -5,7 +5,7 @@ import math , time , datetime,sys , os
 from Functions import Store , Execute , FindExpiry
 
 
-def Search(ApiZerodha ,   Variables , QuantityJSON , Cred , TradeFunctionStart , StrategyNo):
+def Search(ApiZerodha ,   Variables , QuantityJSON , Cred , TradeFunctionStart , StrategyNo , TradeAPI):
 
    
     exchange = "NFO:"
@@ -92,8 +92,85 @@ def Search(ApiZerodha ,   Variables , QuantityJSON , Cred , TradeFunctionStart ,
             
             Store.Global_Status[('Strategy'+ StrategyNo)].append(("Price is CE: "+ str(round(Store.Price[StrategyNo]['CE'], 2)) + ' PE: '  +  str(round(Store.Price[StrategyNo]['PE'] , 2))))
             Store.Global_Status[('Strategy'+ StrategyNo)].append(("StopLoss is CE: "+ str(round(Store.stopLoss[StrategyNo]['CE'],2)) + ' PE: '  +  str(round(Store.stopLoss[StrategyNo]['PE'],2))))
+            Quantity = 20 
+            exchange = 'BFO'
+            orderIDPE= TradeAPI.place_order(variety=TradeAPI.VARIETY_REGULAR,
+                                            tradingsymbol=Store.ZerodhaStrike[StrategyNo]['PE'],
+                                            exchange=exchange,
+                                        transaction_type=TradeAPI.TRANSACTION_TYPE_BUY,
+                                            quantity=Quantity,
+                                            order_type=TradeAPI.ORDER_TYPE_SL,
+                                            price=math.ceil(Store.stopLoss[StrategyNo]["PE"])+20,
+                                            trigger_price=math.ceil(Store.stopLoss[StrategyNo]["PE"]),
+                                            product="NRML",
+                                            validity=TradeAPI.VALIDITY_DAY)
+            orderIDCE = TradeAPI.place_order(variety=TradeAPI.VARIETY_REGULAR,
+                                            tradingsymbol=Store.ZerodhaStrike[StrategyNo]['CE'],
+                                            exchange=exchange,
+                                        transaction_type=TradeAPI.TRANSACTION_TYPE_BUY,
+                                            quantity=Quantity,
+                                            order_type=TradeAPI.ORDER_TYPE_SL,
+                                            price=math.ceil(Store.stopLoss[StrategyNo]["CE"])+20,
+                                            trigger_price=math.ceil(Store.stopLoss[StrategyNo]["CE"]),
+                                            product="NRML",
+                                            validity=TradeAPI.VALIDITY_DAY)
+            print(orderIDCE , orderIDPE)
+            while(True):
+                CEOrderHistory = TradeAPI.order_history(orderIDCE)
+                PEOrderHistory = TradeAPI.order_history(orderIDPE)
+                # print(CEOrderHistory[-1]['status'])
+                print("CE: ",CEOrderHistory[-1]['status'])
+                print("PE: ",PEOrderHistory[-1]['status'])
+                if CEOrderHistory[-1]['status']=="COMPLETE":
+                    try:
+                      TradeAPI.cancel_order(TradeAPI.VARIETY_REGULAR  , orderIDPE , parent_order_id=None)
+                      orderID= TradeAPI.place_order(variety=TradeAPI.VARIETY_REGULAR,
+                                            tradingsymbol=Store.ZerodhaStrike[StrategyNo]['CE'],
+                                            exchange=exchange,
+                                            transaction_type=TradeAPI.TRANSACTION_TYPE_SELL,
+                                            quantity=Quantity,
+                                            order_type=TradeAPI.ORDER_TYPE_LIMIT,
+                                            product="NRML",
+                                            price = math.ceil(Store.Price[StrategyNo]['CE'])*2,
+                                            validity=TradeAPI.VALIDITY_DAY)
+                      print('placed')
+                      while (True):
+                         ltp = (TradeAPI.ltp(exchange+":"+ Store.ZerodhaStrike[StrategyNo]['PE'])).get(exchange+":"+ Store.ZerodhaStrike[StrategyNo]['PE']).get('last_price')
+                         if ltp >= Store.Price[StrategyNo]['PE']:
+                            TradeAPI.modify_order( variety=TradeAPI.VARIETY_REGULAR, order_id= orderID , order_type=TradeAPI.ORDER_TYPE_MARKET )
 
-        
+                    except Exception as e:
+                        print(e)
+                        print(math.ceil(Store.Price[StrategyNo]['CE'])*2)
+                        
+                        
+                    break
+                if PEOrderHistory[-1]['status']=="COMPLETE":
+                    try:
+                      TradeAPI.cancel_order(TradeAPI.VARIETY_REGULAR , orderIDCE , parent_order_id=None)
+  
+                      orderID= TradeAPI.place_order(variety=TradeAPI.VARIETY_REGULAR,
+                                            tradingsymbol=Store.ZerodhaStrike[StrategyNo]['PE'],
+                                            exchange=exchange,
+                                            transaction_type=TradeAPI.TRANSACTION_TYPE_SELL,
+                                            quantity=Quantity,
+                                            order_type=TradeAPI.ORDER_TYPE_LIMIT,
+                                            product="NRML",
+                                            price = math.ceil(Store.Price[StrategyNo]['PE'])*2,
+                                            validity=TradeAPI.VALIDITY_DAY)
+                      print('placed')
+                      while (True):
+                         ltp = (TradeAPI.ltp(exchange+":"+ Store.ZerodhaStrike[StrategyNo]['CE'])).get(exchange+":"+ Store.ZerodhaStrike[StrategyNo]['CE']).get('last_price')
+                         if ltp >= Store.Price[StrategyNo]['CE']:
+                            TradeAPI.modify_order( variety=TradeAPI.VARIETY_REGULAR, order_id= orderID , order_type=TradeAPI.ORDER_TYPE_MARKET )
+
+                    except Exception as e:
+                        print(e)
+                        print(math.ceil(Store.Price[StrategyNo]['PE'])*2)
+                    break
+                
+                time.sleep(1)
+                os.system('clear')
         
 
     except Exception as e:
@@ -109,4 +186,4 @@ def Search(ApiZerodha ,   Variables , QuantityJSON , Cred , TradeFunctionStart ,
         Store.status1[StrategyNo] = Store.Trading_Strategy_Started
         Store.Global_Status[('Strategy'+ StrategyNo)].append('Trading_Strategy_Started Successfully')
 
-        TradeFunctionStart=  Execute.sl(ApiZerodha , Variables,QuantityJSON , Cred , TradeFunctionStart, StrategyNo)
+        TradeFunctionStart=  Execute.sl(ApiZerodha , Variables,QuantityJSON , Cred , TradeFunctionStart, StrategyNo ,   )

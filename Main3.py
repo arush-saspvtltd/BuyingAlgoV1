@@ -37,20 +37,20 @@ print("Program is now running.")
 def addZerodhaAccount(Credentials):
     ZerodhaAccounts.append(Credentials)
 
-# addZerodhaAccount(Cred.Crosshair)
-addZerodhaAccount(Cred.Riyaaz)
+addZerodhaAccount(Cred.Crosshair2)
+# addZerodhaAccount(Cred.Riyaaz)
 addZerodhaAccount(Cred.Harsh2)
-addZerodhaAccount(Cred.Sanjay)
-addZerodhaAccount(Cred.AnkitShah)
-addZerodhaAccount(Cred.Parag)
-addZerodhaAccount(Cred.Ankit)
-addZerodhaAccount(Cred.Manjunath)
-addZerodhaAccount(Cred.Milan)
-addZerodhaAccount(Cred.Rishee)
-addZerodhaAccount(Cred.Sumit)
-addZerodhaAccount(Cred.InjoNavish)
-addZerodhaAccount(Cred.Vijet)
-addZerodhaAccount(Cred.Dilip)
+# addZerodhaAccount(Cred.Sanjay)
+# addZerodhaAccount(Cred.AnkitShah)
+# addZerodhaAccount(Cred.Parag)
+# addZerodhaAccount(Cred.Ankit)
+# addZerodhaAccount(Cred.Manjunath)
+# addZerodhaAccount(Cred.Milan)
+# addZerodhaAccount(Cred.Rishee)
+# addZerodhaAccount(Cred.Sumit)
+# addZerodhaAccount(Cred.InjoNavish)
+# addZerodhaAccount(Cred.Vijet)
+# addZerodhaAccount(Cred.Dilip)
 
 
 for ZerodhaAccount in ZerodhaAccounts :
@@ -91,6 +91,7 @@ for Client in QuantityJSON:
 Day = datetime.datetime.now().isoweekday()
 # Day = 4
 MainAPI = ExtraFunctions.ZerodhaApiLogin(Cred.Harsh2)
+TradeAPI = ExtraFunctions.ZerodhaApiLogin(Cred.Crosshair2)
 
 
     
@@ -111,26 +112,26 @@ def TradeFunction(Variables  , StrategyNo):
             ExtraFunctions.send_to_telegram("Started taking Trade")
             Store.Global_Status[('Strategy'+ StrategyNo)].append('Time Requirement Fulfilled')
 
-        TradeFunctionStart = Script.Search(MainAPI["API"]  , Variables ,  QuantityJSON , Cred.Harsh2 , TradeFunctionStart, StrategyNo)
+        TradeFunctionStart = Script.Search(MainAPI["API"]  , Variables ,  QuantityJSON , Cred.Harsh2 , TradeFunctionStart, StrategyNo , TradeAPI['API'])
         
 
 
-# if  ExtraFunctions.is_function_used_today("1") == False:
+if  ExtraFunctions.is_function_used_today("1") == False:
     
-#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['1'] , "1"]).start()
-# else :
-#     print("Main One has Finished")
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['1'] , "1"]).start()
+else :
+    print("Main One has Finished")
     
-# if  ExtraFunctions.is_function_used_today("2") == False:
+if  ExtraFunctions.is_function_used_today("2") == False:
     
-#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['2'] , "2"]).start()
-# else :
-#     print("Main Two has Finished")
-# if  ExtraFunctions.is_function_used_today("3") == False:
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['2'] , "2"]).start()
+else :
+    print("Main Two has Finished")
+if  ExtraFunctions.is_function_used_today("3") == False:
     
-#     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['3'] , "3"]).start()
-# else :
-#     print("Main Three has Finished")
+    threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['3'] , "3"]).start()
+else :
+    print("Main Three has Finished")
 if  ExtraFunctions.is_function_used_today("4") == False:
     
     threading.Thread(target=TradeFunction ,args = [Strategies[str(Day)]['4'] , "4"]).start()
@@ -140,11 +141,12 @@ else :
 while True :
     # try :
         # print((Store.Global_Status))
-        print( "Time:", datetime.datetime.now().strftime('%H:%M:%S'))
-        ExtraFunctions.display_arrays_and_objects(Store.Global_Status)
+        # print( "Time:", datetime.datetime.now().strftime('%H:%M:%S'))
+        # ExtraFunctions.display_arrays_and_objects(Store.Global_Status)
+        print()
         
         
     # except Exception as  e:
     #     print(e , "Exception in main") 
         time.sleep(1)
-        os.system('clear')
+        # os.system('clear')

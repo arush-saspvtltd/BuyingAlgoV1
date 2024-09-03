@@ -278,3 +278,11 @@ Dilip ={
     "user_pwd": "F@145nur9",
     "totp_key": "4QPXB4F5GIZ3G5SMAHK3OKCRMVSMC3I4"
 }
+
+Crosshair2 ={
+    "api_key": "12kder0f7fjb9waf",
+    "api_secret": "crebuz2yk6aqx0y8xqv43ogpkl5b8wm8",
+    "user_id": "VJ4170",
+    "user_pwd": "arush123",
+    "totp_key": "MDQJDQXZZEDAEQGQUGWPXVKOPIMTB6UG"
+}

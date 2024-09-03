@@ -22,8 +22,8 @@ def CapitalZerodha(api):
       
         capital = (capital.get("equity").get("available").get("cash") + (capital).get("equity").get("available").get("collateral")+(capital).get("equity").get("available").get("intraday_payin"))
         UID =api.profile()['user_id']
-        if UID == 'KZZ053':
-            capital = 800000
+        if UID == 'HPG489':
+            capital = 1000
             
         return capital , UID
 
