@@ -94,6 +94,7 @@ def Search(ApiZerodha ,   Variables , QuantityJSON , Cred , TradeFunctionStart ,
             Store.Global_Status[('Strategy'+ StrategyNo)].append(("StopLoss is CE: "+ str(round(Store.stopLoss[StrategyNo]['CE'],2)) + ' PE: '  +  str(round(Store.stopLoss[StrategyNo]['PE'],2))))
             Quantity = 80 
             exchange = 'NFO'
+            
             orderIDPE= TradeAPI.place_order(variety=TradeAPI.VARIETY_REGULAR,
                                             tradingsymbol=Store.ZerodhaStrike[StrategyNo]['PE'],
                                             exchange=exchange,
