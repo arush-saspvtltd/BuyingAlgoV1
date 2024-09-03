@@ -141,12 +141,12 @@ else :
 while True :
     # try :
         # print((Store.Global_Status))
-        # print( "Time:", datetime.datetime.now().strftime('%H:%M:%S'))
-        # ExtraFunctions.display_arrays_and_objects(Store.Global_Status)
-        print()
+        print( "Time:", datetime.datetime.now().strftime('%H:%M:%S'))
+        ExtraFunctions.display_arrays_and_objects(Store.Global_Status)
+        # print()
         
         
     # except Exception as  e:
     #     print(e , "Exception in main") 
         time.sleep(1)
-        # os.system('clear')
+        os.system('clear')
